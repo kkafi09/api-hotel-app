@@ -1,81 +1,68 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
-import dotenv from 'dotenv';
 import { Request, Response } from 'express';
 import wrapper from '../helpers/wrapper';
 import jwtAuth, { RequestWithUser } from '../middlewares/jwtAuth';
-
-dotenv.config();
+import { uploadImageKit } from '../middlewares/upload';
 
 const prisma = new PrismaClient();
 
 const login = async (req: Request, res: Response) => {
-  const { username, password } = req.body;
+  const { email, password } = req.body;
 
   try {
-    const user = await prisma.user.findUnique({ where: { username } });
-
+    const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
-      return res.status(404).json({
-        status: false,
-        message: 'User not found'
-      });
+      return wrapper.errorResponse(res, user, "username and password didn't match with our record", 404);
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
-
     if (!isPasswordValid) {
-      return res.status(400).json({
-        status: false,
-        message: 'Invalid Credentials'
-      });
+      return wrapper.errorResponse(res, user, "username and password didn't match with our record", 404);
     }
 
     const token = jwtAuth.generateToken(user.id);
+    const result = wrapper.data({ user, token });
 
-    return res.status(200).json({
-      status: true,
-      data: { user, token },
-      message: 'Successfully login'
-    });
-  } catch (error: any) {
-    return res.status(500).json({
-      status: false,
-      message: error.message
-    });
+    return wrapper.response(res, 'success', result, 'Success Login', 200);
+  } catch (error) {
+    return wrapper.errorResponse(res, error, 'Failed to login', 500);
   }
 };
 
 const register = async (req: Request, res: Response) => {
-  const { name, username, password, role } = req.body;
+  const { nama_user, email, password, role } = req.body;
+  const file = req.file;
 
   try {
-    const existingUser = await prisma.user.findUnique({ where: { username } });
-
+    const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
-      const error = new Error('User with this email already exists');
-      throw error;
+      return wrapper.errorResponse(res, existingUser, 'User with this email already exists', 400);
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    let imageUpload = null;
+    if (file) {
+      imageUpload = await uploadImageKit(file);
+    }
+
     const user = await prisma.user.create({
       data: {
-        name,
-        username,
+        nama_user,
+        foto_id: imageUpload ? imageUpload.fileId : '',
+        foto_url: imageUpload ? imageUpload.url : '',
+        email,
         password: hashedPassword,
         role
       }
     });
+    if (!user) {
+      return wrapper.errorResponse(res, user, 'Failed to register user');
+    }
 
     const token = jwtAuth.generateToken(user.id);
-
-    const result = {
-      data: {
-        user,
-        token
-      }
-    };
+    const result = wrapper.data({ user, token });
 
     return wrapper.response(res, 'success', result, 'Success register', 201);
   } catch (error) {
@@ -84,7 +71,7 @@ const register = async (req: Request, res: Response) => {
 };
 
 const getUser = async (req: RequestWithUser, res: Response) => {
-  const userId = req.user;
+  const userId = req.userId;
 
   if (!userId) {
     return wrapper.errorResponse(res, null, 'token not provided', 500);
