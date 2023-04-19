@@ -7,20 +7,76 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = "mysql://kafi:kafi@localhost/ett-db"
-}
-
-model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  username  String   @unique
-  password  String
-  role      Role     @default(USER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now())
+  url      = env("DATABASE_URL")
 }
 
 enum Role {
-  ADMIN
   USER
+  RECEPTIONIST
+  ADMIN
+}
+
+enum Status {
+  BARU
+  CHECK_IN
+  CHECK_OUT
+}
+
+model User {
+  id        Int         @id @unique @default(autoincrement())
+  nama_user String
+  foto_url  String      @default("")
+  foto_id   String      @default("")
+  email     String      @unique
+  password  String
+  role      Role        @default(USER)
+  pemesanan Pemesanan[]
+}
+
+model Pemesanan {
+  id_pemesanan     Int                @id @default(autoincrement())
+  uuid             String             @unique @default(uuid())
+  nomor_pemesanan  String
+  nama_pemesan     String
+  email_pemesan    String
+  tgl_pemesanan    DateTime
+  tgl_check_in     DateTime
+  tgl_check_out    DateTime
+  nama_tamu        String
+  jumlah_kamar     Int
+  id_tipe_kamar         Int
+  detail_pemesanan Detail_Pemesanan[]
+  status_kamar     Status
+  id_user          Int
+  kamar            Kamar              @relation(fields: [id_tipe_kamar], references: [id_kamar])
+  user             User               @relation(fields: [id_user], references: [id])
+}
+
+model Detail_Pemesanan {
+  id_detail_pemesanan Int       @id @unique @default(autoincrement())
+  pemesanan           Pemesanan @relation(fields: [id_pemesanan], references: [id_pemesanan])
+  kamar               Kamar     @relation(fields: [id_kamar], references: [id_kamar])
+  id_pemesanan        Int
+  id_kamar            Int
+  tgl_akses           DateTime
+  harga               Int
+}
+
+model Kamar {
+  id_kamar         Int                @id @default(autoincrement())
+  nomor_kamar      Int                @unique
+  id_tipe_kamar    Int
+  detail_pemesanan Detail_Pemesanan[]
+  tipe_kamar       Tipe_Kamar         @relation(fields: [id_tipe_kamar], references: [id_tipe_kamar])
+  pemesanan        Pemesanan[]
+}
+
+model Tipe_Kamar {
+  id_tipe_kamar   Int     @id @default(autoincrement())
+  nama_tipe_kamar String  @unique
+  harga           Int
+  deskripsi       String
+  foto_url        String
+  foto_id         String
+  kamar           Kamar[]
 }
