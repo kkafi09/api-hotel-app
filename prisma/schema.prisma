@@ -35,7 +35,8 @@ model User {
 
 model Pemesanan {
   id_pemesanan     Int                @id @default(autoincrement())
-  nomor_pemesanan  String             @unique @default(uuid())
+  uuid             String             @unique @default(uuid())
+  nomor_pemesanan  String
   nama_pemesan     String
   email_pemesan    String
   tgl_pemesanan    DateTime
@@ -43,7 +44,7 @@ model Pemesanan {
   tgl_check_out    DateTime
   nama_tamu        String
   jumlah_kamar     Int
-  id_tipe_kamar    Int
+  id_tipe_kamar         Int
   detail_pemesanan Detail_Pemesanan[]
   status_kamar     Status
   id_user          Int
