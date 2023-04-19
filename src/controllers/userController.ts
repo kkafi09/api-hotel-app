@@ -44,7 +44,7 @@ const register = async (req: Request, res: Response) => {
 
     let imageUpload = null;
     if (file) {
-      imageUpload = await uploadImageKit(file);
+      imageUpload = await uploadImageKit(file, 'user');
     }
 
     const user = await prisma.user.create({

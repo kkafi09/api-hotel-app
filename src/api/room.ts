@@ -1,13 +1,16 @@
 import express from 'express';
-import userController from '../controllers/userController';
-import jwtAuth from '../middlewares/jwtAuth';
+import roomController from '../controllers/roomController';
 
 const router = express.Router();
 
-router.post('/login', userController.login);
+router.get('/', roomController.getRooms);
 
-router.post('/register', userController.register);
+router.get('/:id', roomController.getRoomById);
 
-router.get('/', jwtAuth.verifyToken, userController.getUser);
+router.post('/', roomController.createRoom);
+
+router.put('/:id', roomController.updateRoom);
+
+router.delete('/:id', roomController.deleteRoom);
 
 export default router;

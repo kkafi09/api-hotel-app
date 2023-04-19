@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 
 export interface RequestWithUser extends Request {
   userId?: number;
-  user: User | null;
+  user?: User | null;
 }
 
 const generateToken = (userId: Number) => {

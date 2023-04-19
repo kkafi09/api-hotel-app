@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import express, { Request, Response } from 'express';
 import morgan from 'morgan';
 import roomApi from './api/room';
+import typeApi from './api/type';
 import userApi from './api/user';
 
 dotenv.config();
@@ -21,6 +22,7 @@ app.get('/', (_req: Request, res: Response) => {
 });
 
 app.use('/api/v1/user/', userApi);
+app.use('/api/v1/room/t/', typeApi);
 app.use('/api/v1/room/', roomApi);
 
 app.listen(port, () => {

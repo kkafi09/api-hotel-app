@@ -1,6 +1,7 @@
 import { Kamar, PrismaClient } from '@prisma/client';
 import { Request, Response } from 'express';
 import wrapper from '../helpers/wrapper';
+import { RequestWithUser } from '../middlewares/jwtAuth';
 
 const prisma = new PrismaClient();
 
@@ -40,8 +41,8 @@ const getRoomById = async (req: Request, res: Response) => {
   }
 };
 
-const createRoom = async (req: Request, res: Response) => {
-  const { nomor_kamar, id_tipe_kamar, ...payload } = req.body;
+const createRoom = async (req: RequestWithUser, res: Response) => {
+  const { nomor_kamar, id_tipe_kamar } = req.body;
 
   try {
     const findRoom = await prisma.kamar.findUnique({
@@ -63,7 +64,10 @@ const createRoom = async (req: Request, res: Response) => {
     }
 
     const createRoom = await prisma.kamar.create({
-      data: payload
+      data: {
+        nomor_kamar: Number(nomor_kamar),
+        id_tipe_kamar: Number(id_tipe_kamar)
+      }
     });
     if (!createRoom) {
       return wrapper.response(res, 'success', createRoom, 'Room created', 201);
@@ -79,7 +83,7 @@ const createRoom = async (req: Request, res: Response) => {
 
 const updateRoom = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { id_tipe_kamar, ...payload } = req.body;
+  const { id_tipe_kamar, nomor_kamar } = req.body;
 
   try {
     const findRoom = await prisma.kamar.findUnique({
@@ -102,9 +106,12 @@ const updateRoom = async (req: Request, res: Response) => {
 
     const updateRoom = await prisma.kamar.update({
       where: {
-        id_kamar: parseInt(id)
+        id_kamar: Number(id)
       },
-      data: payload
+      data: {
+        id_tipe_kamar: Number(id_tipe_kamar),
+        nomor_kamar: Number(nomor_kamar)
+      }
     });
     if (!updateRoom) {
       return wrapper.errorResponse(res, updateRoom, 'Failed to update room', 400);
@@ -128,7 +135,7 @@ const deleteRoom = async (req: Request, res: Response) => {
       }
     });
     if (!findRoom) {
-      return res.status(404).json({ success: false, message: 'Data not found', data: [] });
+      return wrapper.errorResponse(res, findRoom, 'Room not found', 404);
     }
 
     const deleteRoom = await prisma.kamar.delete({
@@ -137,7 +144,7 @@ const deleteRoom = async (req: Request, res: Response) => {
       }
     });
     if (!deleteRoom) {
-      return res.status(400).json({ success: false, message: 'Failed to update data', data: [] });
+      return wrapper.errorResponse(res, deleteRoom, 'Failed to delete room', 400);
     }
 
     const result = wrapper.data(deleteRoom);

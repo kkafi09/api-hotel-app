@@ -1,4 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
+import { Tipe_Kamar } from '@prisma/client';
 import { Request, Response } from 'express';
 import wrapper from '../helpers/wrapper';
 import { imagekit, uploadImageKit } from '../middlewares/upload';
@@ -7,7 +8,7 @@ const prisma = new PrismaClient();
 
 const getTypes = async (_req: Request, res: Response) => {
   try {
-    const getTypeRooms = await prisma.Tipe_Kamar.findMany();
+    const getTypeRooms: Tipe_Kamar[] = await prisma.Tipe_Kamar.findMany();
     const result = wrapper.data(getTypeRooms);
 
     if (!getTypeRooms) {
@@ -26,7 +27,7 @@ const getTypeById = async (req: Request, res: Response) => {
   try {
     const getTypeRoom = await prisma.Tipe_Kamar.findUnique({
       where: {
-        id: parseInt(id)
+        id_tipe_kamar: Number(id)
       }
     });
     const result = wrapper.data(getTypeRoom);
@@ -43,9 +44,10 @@ const getTypeById = async (req: Request, res: Response) => {
 
 const createType = async (req: Request, res: Response) => {
   const { nama_tipe_kamar, harga, deskripsi } = req.body;
+  const file = req.file;
 
   try {
-    const checkType = await prisma.Tipe_Kamar.findUnique({
+    const checkType = await prisma.Tipe_Kamar.findFirst({
       where: {
         nama_tipe_kamar
       }
@@ -58,17 +60,16 @@ const createType = async (req: Request, res: Response) => {
       return wrapper.errorResponse(res, Number(harga), 'The price must be valid', 400);
     }
 
-    const file = req.file;
     if (!file) {
       return wrapper.errorResponse(res, file, 'No file uploaded', 400);
     }
 
-    const imageUrl = await uploadImageKit(file);
+    const imageUrl = await uploadImageKit(file, 'type');
 
     const createType = await prisma.Tipe_Kamar.create({
       data: {
         nama_tipe_kamar,
-        harga,
+        harga: Number(harga),
         deskripsi,
         foto_id: imageUrl.fileId,
         foto_url: imageUrl.url
@@ -82,6 +83,7 @@ const createType = async (req: Request, res: Response) => {
 
     return wrapper.response(res, 'success', result, 'Success create type room', 200);
   } catch (err) {
+    console.log('err', err);
     return wrapper.errorResponse(res, err, 'Error create type room');
   }
 };
@@ -94,7 +96,7 @@ const updateType = async (req: Request, res: Response) => {
   try {
     const getType = await prisma.Tipe_Kamar.findUnique({
       where: {
-        id: parseInt(id)
+        id_tipe_kamar: Number(id)
       }
     });
     if (!getType) {
@@ -107,18 +109,25 @@ const updateType = async (req: Request, res: Response) => {
 
     let imageUrl = null;
     if (file) {
-      imageUrl = await uploadImageKit(file);
+      imageUrl = await uploadImageKit(file, 'type');
+
+      try {
+        await imagekit.deleteFile(getType.foto_id);
+      } catch (error) {
+        return wrapper.errorResponse(res, error, 'Failed to delete file from imagekit', 400);
+      }
     }
 
     const updateType = await prisma.Tipe_Kamar.update({
       where: {
-        id: parseInt(id)
+        id_tipe_kamar: parseInt(id)
       },
       data: {
         nama_tipe_kamar: payload.nama_tipe_kamar ? payload.nama_tipe_kamar : getType.nama_tipe_kamar,
-        foto: imageUrl ? imageUrl : getType.foto,
+        foto_id: imageUrl ? imageUrl.fileId : getType.foto_id,
+        foto_url: imageUrl ? imageUrl.url : getType.foto_url,
         deskripsi: payload.deskripsi ? payload.deskripsi : getType.deskripsi,
-        harga: payload.harga ? payload.harga : getType.harga
+        harga: payload.harga ? Number(payload.harga) : getType.harga
       }
     });
     if (!updateType) {
@@ -127,9 +136,10 @@ const updateType = async (req: Request, res: Response) => {
 
     const result = wrapper.data(updateType);
 
-    return wrapper.response(res, 'success', result, 'Success create type room', 200);
+    return wrapper.response(res, 'success', result, 'Success update type room', 200);
   } catch (err) {
-    return wrapper.errorResponse(res, err, 'Error create type room');
+    console.log('err', err);
+    return wrapper.errorResponse(res, err, 'Error update type room');
   }
 };
 
@@ -139,7 +149,7 @@ const deleteType = async (req: Request, res: Response) => {
   try {
     const getType = await prisma.Tipe_Kamar.findUnique({
       where: {
-        id: parseInt(id)
+        id_tipe_kamar: parseInt(id)
       }
     });
     if (!getType) {
@@ -148,7 +158,7 @@ const deleteType = async (req: Request, res: Response) => {
 
     const deleteType = await prisma.Tipe_Kamar.delete({
       where: {
-        id: parseInt(id)
+        id_tipe_kamar: parseInt(id)
       }
     });
     if (!deleteType) {
@@ -170,7 +180,8 @@ const deleteType = async (req: Request, res: Response) => {
     return wrapper.errorResponse(res, err, 'Error delete type room');
   }
 };
-module.exports = {
+
+export default {
   getTypes,
   getTypeById,
   createType,

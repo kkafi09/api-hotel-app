@@ -60,7 +60,7 @@ const response = (
 
 const errorResponse = (res: Response, result: any, message: string = '', code: number = 500) => {
   let status = true;
-  let data = result ? result.data : null;
+  let data = result ? result.message : null;
 
   res.status(code).json({
     success: status,
