@@ -97,3 +97,10 @@ The API endpoints are listed below:
 ## Conclusion
 
 This project provides a basic API application for hotel reservation management. You can build on top of this application to add more features and functionality.
+
+## Authors
+- [@kkafi09](https://www.github.com/kkafi09)
+
+## Support
+- [@MrNewbie3](https://www.github.com/kkafi09)
+
