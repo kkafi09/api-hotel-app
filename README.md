@@ -102,5 +102,5 @@ This project provides a basic API application for hotel reservation management. 
 - [@kkafi09](https://www.github.com/kkafi09)
 
 ## Support
-- [@MrNewbie3](https://www.github.com/kkafi09)
+- [@MrNewbie3](https://www.github.com/MrNewbie3)
 
