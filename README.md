@@ -20,7 +20,7 @@ To get started with this project, you should follow these steps:
 First, clone this repository to your local machine:
 
 ```bash
-git clone https://github.com/your-username/hotel-reservation-api.git
+git clone https://github.com/kkafi09/api-hotel-app
 ```
 
 ### Install Dependencies
