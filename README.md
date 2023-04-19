@@ -41,7 +41,7 @@ Create a new file called .env at the root of the project, and add the following 
 DATABASE_URL="mysql://<username>:<password>@<host>:<port>/<database_name>?schema=<schema_name>"
 ```
 
-Make sure to replace **<username>, <password>, <host>, <port>, <database_name>, and <schema_name>** with your own values.
+Make sure to replace the value in <> with your own values.
 
 ### Run Database Migrations
 
